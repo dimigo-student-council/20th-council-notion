@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none;
+        }
+        .container {
+            position: fixed;
+            left: var(--fixed-x);
+            display: flex;
+            flex-direction: row;
+            /* justify-content: center; */
+        }
+        .scroll-item {
+            width: 200px;
+            height: 200px;
+            align-self: center;
+            padding: 0;
+            margin: 0 1rem;
+            background-size: cover;
+            
+            background-position: center;
+        }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+        <div class="scroll-item"></div>
+        <div class="scroll-item"></div>
+        <div class="scroll-item"></div>
+        <div class="scroll-item"></div>
+    <script>
+        container = document.getElementsByClassName('container')[0];
+        items = document.getElementsByClassName('scroll-item');
+
+        for (var i in items) {
+            if (i == items.length-1) {
+                items[i].remove();
+                break;
+            }
+            items[i].style.backgroundImage = 'url("https://luna-coding.github.io/luna-dimigoin/assets/images/people/' + (Number(i)+1) + '.jpg")'
+        }
+
+        // itemW = items[0].offsetWidth + items[0].style.marginLeft + items[0].style.marginRight;  // item의 width는 동일해야 함
+        containerW = container.offsetWidth;
+        itemW = containerW / items.length;
+        console.log(itemW);
+        
+        fixedX = 0;
+        justMoved = false;
+        justMovedClearTimeoutId = null;
+        checkOvered = () => {
+            // 아이콘이 왼쪽을 넘어갔는지 확인
+            while (-fixedX >= itemW) {
+                let ele = items[0].cloneNode();
+                container.appendChild(ele); 
+                items[0].remove();
+                items = document.getElementsByClassName('scroll-item');
+                fixedX += itemW;
+                container.style.left = fixedX + 'px';
+            }
+            // 아이콘이 오른쪽을 넘어갔는지 확인
+            while (fixedX >= 0) {
+                let ele = items[items.length-1].cloneNode();
+                container.insertBefore(ele, container.firstChild);
+                items[items.length-1].remove();
+                items = document.getElementsByClassName('scroll-item');
+                fixedX -= itemW;
+                container.style.left = fixedX + 'px';
+            }
+        };
+        setInterval(
+            () => {
+                if (!justMoved) {
+                    container.style.left = fixedX + 'px';
+                    fixedX -= 1;
+                    checkOvered();
+                }
+            },
+            20
+        );
+        document.body.addEventListener('wheel', (event) => {
+            var delta = (event.deltaX == 0) ? event.deltaY : event.deltaX;
+            if (Math.abs(delta) >= 10) {
+                var alpha = 1 * delta / Math.abs(delta);
+                var gamma = alpha;
+                step = () => {
+                    fixedX -= gamma;
+                    container.style.left = fixedX + 'px';
+                    checkOvered();
+                    gamma += alpha;
+                    if (Math.abs(gamma) < Math.abs(delta/10)) {
+                        setTimeout(step, 5);
+                    }
+                }
+                setTimeout(step, 5);
+            }
+            fixedX -= delta;
+            container.style.left = fixedX + 'px';
+            checkOvered();
+            justMoved = true;
+            if (justMovedClearTimeoutId !== null) {
+                clearTimeout(justMovedClearTimeoutId);
+            }
+            justMovedClearTimeoutId = setTimeout(() => {
+                justMoved = false;
+            }, 1000);
+            event.preventDefault();
+            return false;
+        }, {passive: false});
+    </script>
+  </body>
+</html>
